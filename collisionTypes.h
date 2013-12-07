@@ -79,6 +79,9 @@ private:
 	TextDX font;
 	TextDX invincible;
 	TextDX scoreText;
+	TextDX* scoreIndicator;
+	
+
 
 	// State 
 	GameStates gameStates;

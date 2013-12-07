@@ -11,7 +11,7 @@
 //=============================================================================
 CollisionTypes::CollisionTypes()
 {
-	//nothing here, move on
+	scoreIndicator = new TextDX();
 }
 
 //=============================================================================
@@ -245,7 +245,7 @@ void CollisionTypes::initialize(HWND hwnd)
 	//SHIPS:
 	for (int i = 0; i<7; i++)
 	{
-		if (!enemyShips[i].initialize(this, shipNS::WIDTH, shipNS::HEIGHT, shipNS::COLS, &enemyShipTM))
+		if (!enemyShips[i].initialize(this, shipNS::WIDTH, shipNS::HEIGHT, shipNS::COLS, &enemyShipTM, scoreIndicator))
 			throw(GameError(gameErrorNS::WARNING, "Ship not initialized"));
 		enemyShips[i].setCollisionType(entityNS::BOX);
 		enemyShips[i].setEdge(COLLISION_BOX_SHIP);
@@ -260,7 +260,7 @@ void CollisionTypes::initialize(HWND hwnd)
 	//TANKS:
 	for (int i=0; i<7; i++)
 	{
-		if (!enemyTanks[i].initialize(this, tankNS::WIDTH, tankNS::HEIGHT, 0, &enemyTankTM))
+		if (!enemyTanks[i].initialize(this, tankNS::WIDTH, tankNS::HEIGHT, 0, &enemyTankTM, scoreIndicator))
 			throw(GameError(gameErrorNS::WARNING, "Tank not initialized"));
 		enemyTanks[i].setCollisionType(entityNS::BOX);
 		enemyTanks[i].setEdge(COLLISION_BOX_TANK);
@@ -291,11 +291,22 @@ void CollisionTypes::initialize(HWND hwnd)
 	scoreText.setFontColor(graphicsNS::YELLOW);
 
 
+	//for(int i = 0; i < 4; i++)
+	//{
+		//if(scoreIndicators[0]->initialize(graphics, 20, true, false, "Small Fonts") == false)
+		//	throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing DirectX font"));
+		
+		scoreIndicator->initialize(graphics, 30, true, false, "Small Fonts");
+		scoreIndicator->setFontColor(graphicsNS::YELLOW);
+	//}
+
+
 	//MISC.
 	srand(time(0));
 	score = 0;
 	invincibility = false;
 	totalScore = 0;
+	
 	
 	//currentlyHit1 = NULL;
 	//currentlyHit2 = NULL;
@@ -531,7 +542,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = rand()%100 + 150;
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 5.0;
+		endLevelTime = 45.0;
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -730,11 +741,14 @@ void CollisionTypes::update()
 			shipToGround();
 			createBungee();
 
+			//reset enemies
 			for(int i = 0; i < numShips+numTanks; i++)
 			{
 				if(enemies[i]->getNeedsReset())   
 					resetEnemy(enemies[i]);
 			}
+
+
 			for(int i = 0; i < numAvatarBullets; i++)
 			{
 				int tempGroundLoc = avatarBullets[i].getGroundLoc();
@@ -770,7 +784,7 @@ void CollisionTypes::update()
 				shield.setVisible(false);
 				shield.setActive(false);
 			}
-			
+						
 	
 			//////////////////
 			// Update Objects
@@ -1058,6 +1072,9 @@ void CollisionTypes::shipToGround()
 			if(enemyShips[i].getBungeed())
 			{
 				score += 1;
+				//score indicators
+				enemies[i]->addScore(1,enemies[i]->getX(),enemies[i]->getY());
+
 				enemyShips[i].setBungeed(false);
 				bungees[0].clear();
 
@@ -1401,6 +1418,8 @@ void CollisionTypes::collisions()
 						numMarked--;
 					}
 					score += 5;
+					//score indicators
+					enemies[i]->addScore(5,enemies[i]->getX(),enemies[i]->getY());
 				}
 				if(!enemies[j]->getBungeed() && enemies[i]->getBungeed())		// If Enemy j does not have a bungee and Enemy i
 				{																	// does then Enemy j dies
@@ -1428,6 +1447,8 @@ void CollisionTypes::collisions()
 						numMarked--;
 					}
 					score += 5;
+					//score indicators
+					enemies[j]->addScore(5,enemies[j]->getX(),enemies[j]->getY());
 				}
 				if(enemies[j]->getBungeed() && enemies[i]->getBungeed())		// If Enemies j and i both have bungies they die
 				{
@@ -1470,7 +1491,14 @@ void CollisionTypes::collisions()
 
 					enemies[i]->setBungeed(false);
 					enemies[j]->setBungeed(false);
+					
+
 					score += 2;
+					//score indicators
+					enemies[i]->addScore(1,enemies[i]->getX(),enemies[i]->getY());
+					enemies[j]->addScore(1,enemies[j]->getX(),enemies[j]->getY());
+
+
 					//make a for loop if using multiple bungees
 					bungees[0].clear();
 
@@ -1638,6 +1666,10 @@ void CollisionTypes::render()
 			bar.draw();
 			timeBar.setScaleX(timeLeftOnLevel);
 			timeBar.draw();
+
+			//display score indicators if needed
+			for(int i = 0; i < numShips+numTanks; i++)
+				enemies[i]->displayScore();
 
 			break;
 		}

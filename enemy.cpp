@@ -27,6 +27,18 @@ Enemy::Enemy() : Entity()
 	marked = false;
 	bungeed = false;
 	needsReset = false;
+	fontDisplayFrameCount = 0;
+	scoreToDisplay = 0;
+
+	//for(int i = 0; i < 4; i++)
+	//{
+	//	//if(scoreIndicators[0]->initialize(graphics, 20, true, false, "Small Fonts") == false)
+	//	//	throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing DirectX font"));
+	//	scoreIndicators[i] = new TextDX();
+	//	scoreIndicators[i]->initialize(graphics, 20, false, false, "Small Fonts");
+	//	scoreIndicators[i]->setFontColor(graphicsNS::YELLOW);
+	//}
+
 	//attachedTo = NULL;
 }
 
@@ -79,4 +91,26 @@ void Enemy::update(float frameTime)
 	//velocity = D3DXVECTOR2(0,0);
 
 	//velocity.x = enemyNS::SPEED;
+}
+
+void Enemy::displayScore()
+{
+	if (scoreToDisplay > 0)
+	{
+
+		if (++fontDisplayFrameCount < 85)
+		{
+			char buffer[5];
+			sprintf(buffer,"+%i",scoreToDisplay);
+			//for(int i=0; i<4; i++)
+			//	if(scoreIndicators[i].set
+			scoreIndicator->setFontColor(SETCOLOR_ARGB(255 - 3*fontDisplayFrameCount,255,0,0));
+			//move to render
+			scoreIndicator->print(buffer, x+(spriteData.width/2), y -25 - .2*fontDisplayFrameCount);	
+		}
+		else{
+			fontDisplayFrameCount = 0;
+			scoreToDisplay = 0;
+		}
+	}
 }

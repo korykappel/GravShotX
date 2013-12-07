@@ -32,13 +32,14 @@ private:
 	bool hitGround;
 	//bool marked;
 
+
 public:
     // constructor
     Ship();
 
     // inherited member functions
     virtual bool initialize(Game *gamePtr, int width, int height, int ncols,
-                            TextureManager *textureM);
+                            TextureManager *textureM, TextDX* font);
     void update(float frameTime);
 
     // Set collision Boolean

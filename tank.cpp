@@ -33,9 +33,9 @@ Tank::Tank() : Enemy()
 // Post: returns true if successful, false if failed
 //=============================================================================
 bool Tank::initialize(Game *gamePtr, int width, int height, int ncols,
-    TextureManager *textureM)
+    TextureManager *textureM, TextDX* font)
 {
-    return(Entity::initialize(gamePtr, width, height, ncols, textureM));
+    return(Enemy::initialize(gamePtr, width, height, ncols, textureM, font));
 }
 
 //=============================================================================

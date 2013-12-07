@@ -5,6 +5,7 @@
 
 #include "entity.h"
 #include "constants.h"
+#include "textDX.h"
 //#include "bungee.h"
 
 namespace enemyNS
@@ -31,6 +32,12 @@ private:
 	bool needsReset;
 	bool bungeed;
 
+	//score indicator stuff
+	int scoreToDisplay;
+	int fontDisplayFrameCount;
+	TextDX* scoreIndicator;
+	int x, y;
+
 	Type type;
 	
 	//Bungee* attachedTo;
@@ -38,6 +45,10 @@ private:
 public:
     // constructor
     Enemy();
+
+	bool initialize(Game *gamePtr, int width, int height, int ncols, TextureManager *textureM, TextDX* font)
+	{scoreIndicator = font; return Entity::initialize(gamePtr, width, height, ncols, textureM);}
+
 
     // inherited member functions
     virtual bool initialize(Game *gamePtr, int width, int height, int ncols,
@@ -59,6 +70,8 @@ public:
 	void setType(Type t) {type = t;}
 	Type getType() {return type;}
 
+	void addScore(int score, int posx, int posy) {x=posx; y=posy; scoreToDisplay = score; fontDisplayFrameCount = 0;}
+	void displayScore();
 };
 #endif
 
