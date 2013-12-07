@@ -1664,7 +1664,7 @@ void CollisionTypes::render()
 			font.print(marked.str(), 20, 20);
 
 			bar.draw();
-			timeBar.setScaleX(timeLeftOnLevel);
+			timeBar.setScaleX(timeLeftOnLevel*(100.0/45.0));
 			timeBar.draw();
 
 			//display score indicators if needed
