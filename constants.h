@@ -76,6 +76,7 @@ inline void safeOnResetDevice(T& ptr)
 // window
 const char CLASS_NAME[] = "Gravity Shot X";
 const char GAME_TITLE[] = "Gravity Shot X";
+const char SCORES_NAME[] = "GravityShotScores.txt";
 const bool FULLSCREEN = false;              // windowed or fullscreen
 const UINT GAME_WIDTH =  1200;               // width of game in pixels
 const UINT GAME_HEIGHT = 700;               // height of game in pixels

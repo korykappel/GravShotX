@@ -29,17 +29,6 @@ Enemy::Enemy() : Entity()
 	needsReset = false;
 	fontDisplayFrameCount = 0;
 	scoreToDisplay = 0;
-
-	//for(int i = 0; i < 4; i++)
-	//{
-	//	//if(scoreIndicators[0]->initialize(graphics, 20, true, false, "Small Fonts") == false)
-	//	//	throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing DirectX font"));
-	//	scoreIndicators[i] = new TextDX();
-	//	scoreIndicators[i]->initialize(graphics, 20, false, false, "Small Fonts");
-	//	scoreIndicators[i]->setFontColor(graphicsNS::YELLOW);
-	//}
-
-	//attachedTo = NULL;
 }
 
 //=============================================================================

@@ -23,8 +23,14 @@ class CollisionTypes;
 #include "textDX.h"
 #include "menu.h"
 #include "shield.h"
+#include "HighScoreEntry.h"
 #include <sstream>
 #include <iomanip>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
 
 //=============================================================================
 // This class is the core of the game
@@ -75,12 +81,14 @@ private:
 	float timeLeftOnLevel;
 	bool invincibility;
 	int crashedTime;
+	bool showHighScores;
 
 	TextDX font;
 	TextDX invincible;
 	TextDX scoreText;
 	TextDX* scoreIndicator;
 	
+	std::vector<HighScoreEntry> highScores;
 
 
 	// State 
@@ -120,6 +128,9 @@ public:
 	void initializeLevel();
 	void moveBackground();
 	void resetEverything();
+
+	void getScores();
+	void outputScores(std::string);
 	
 
 	int enemyBulletSpeed;

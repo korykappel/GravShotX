@@ -324,6 +324,7 @@ void CollisionTypes::initialize(HWND hwnd)
 	timeInState = 0;
 	gameStates = menu;
 	gameStart = false;
+	showHighScores = false;
 
 
 	//AUDIO
@@ -358,11 +359,19 @@ void CollisionTypes::gameStateUpdate()
 			gameStates = gamePlay;
 			timeInState = 0;
 		}
-		else if(gameStates == win)
+		else if(gameStates == win && showHighScores)
 		{
 			gameStates = menu;
 			gameStart = false;
 			timeInState = 0;
+		}
+		else if(gameStates == win && !showHighScores)
+		{
+			showHighScores = true;
+			timeInState = 0;
+			getScores();
+			outputScores(input->getTextIn());
+			highScores.resize(9,HighScoreEntry("---",0));
 		}
 		else if (gameStates==menu && gameStart)
 		{
@@ -374,13 +383,6 @@ void CollisionTypes::gameStateUpdate()
 		}
 	}
 	
-	/*if (gameStates==menu && gameStart)
-	{
-		level = 1;
-		initializeLevel();
-		gameStates = gamePlay;
-		timeInState = 0;
-	}*/
 	else if (gameStates==gamePlay && input->isKeyDown(VK_ESCAPE))
 	{
 		gameStates = quit;
@@ -391,6 +393,7 @@ void CollisionTypes::gameStateUpdate()
 		totalScore += score;
 		gameStates = win;
 		timeInState = 0;
+		input->clearTextIn();
 	}
 	else if (gameStates==gamePlay && (timeInState > endLevelTime) && (level != 3))  //GetTickCount()-startLevelTime >= endLevelTime
 	{
@@ -406,19 +409,6 @@ void CollisionTypes::gameStateUpdate()
 			timeInState = 0;
 		}
 	}
-	/*else if(gameStates == levelEnd && input->isKeyDown(ENTER_KEY))
-	{
-		level++;
-		initializeLevel();
-		gameStates = gamePlay;
-		timeInState = 0;
-	}*/
-	/*else if(gameStates == restart && input->isKeyDown(ENTER_KEY))
-	{
-		initializeLevel();
-		gameStates = gamePlay;
-		timeInState = 0;
-	}*/
 	else if(gameStates == restart && input->isKeyDown(0x4D))  //go back to menu
 	{
 		gameStates = menu;
@@ -435,11 +425,6 @@ void CollisionTypes::gameStateUpdate()
 	{
 		PostQuitMessage(0);
 	}
-	//else if(gameStates == gamePlay && baseHealth <= 0)
-	//{
-	//	gameStates = restart;
-	//	timeInState = 0;
-	//}
 }
 
 void CollisionTypes::resetEverything()
@@ -456,6 +441,7 @@ void CollisionTypes::resetEverything()
 	numMarked = 0;
 	groundLocX = 0;
 	depressedLastFrame = false;
+	showHighScores = false;
 	shipSpawnTime = 0;
 	tankSpawnTime = 0;
 	//baseHealth = 100;
@@ -542,7 +528,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = rand()%100 + 150;
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 45.0;
+		endLevelTime = 3.0;
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -568,7 +554,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = 150;		
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 45.0; 
+		endLevelTime = 3.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -593,7 +579,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = 180;		
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 45.0; 
+		endLevelTime = 3.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 		
@@ -1179,6 +1165,38 @@ void CollisionTypes::spawnEnemyTank()
 	}
 }
 
+void CollisionTypes::getScores()
+{
+	int tempint;
+	std::string tempstr;
+
+	std::ifstream inFile(SCORES_NAME);
+
+	while (inFile >> tempint >> tempstr)
+	{
+		highScores.push_back(HighScoreEntry(tempstr, tempint));
+	}
+	inFile.close();
+}
+
+void CollisionTypes::outputScores(std::string s)
+{
+	std::stringstream scoreStream;
+
+	highScores.push_back(HighScoreEntry(s, score));
+
+	std::sort( highScores.begin(), highScores.end() );
+	
+
+	std::ofstream outFile(SCORES_NAME);
+	for(int i=0; i<highScores.size(); i++)
+	{
+		outFile << highScores[i] << std::endl;
+	}
+
+	outFile.close();
+}
+
 //=============================================================================
 // Artificial Intelligence
 //=============================================================================
@@ -1571,10 +1589,23 @@ void CollisionTypes::render()
 
 		case win: 
 			endScreen.draw();
-			
 
-			scoreStream << "Total Score: " << totalScore;
-			scoreText.print(scoreStream.str(), GAME_WIDTH/2+100, GAME_HEIGHT/2+90);
+			if(!showHighScores)
+			{
+				scoreStream << "Your Score: " << totalScore << endl << "Enter name: " << input->getTextIn();
+				scoreText.print(scoreStream.str(), GAME_WIDTH/2+60, GAME_HEIGHT/2-30);
+			}
+			
+			scoreStream.clear();
+
+			
+			if(showHighScores)
+			{
+				
+				for(int i=0; i<highScores.size(); i++)
+					scoreStream << i+1 << ".   " << highScores[i].score << "    " << highScores[i].name << endl;
+				scoreText.print(scoreStream.str(), GAME_WIDTH/2+80, GAME_HEIGHT/2-30);
+			}
 
 			if(timeInState > 5)
 				credits.draw();
