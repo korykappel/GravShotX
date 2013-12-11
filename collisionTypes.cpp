@@ -39,6 +39,7 @@ void CollisionTypes::initialize(HWND hwnd)
 
 	mainMenu->setMenuHeader("Main Menu");
 	mainMenu->setMenuItem("Start Game");
+	mainMenu->setMenuItem("Tutorial");
 	mainMenu->setMenuItem("Exit Game");
 	mainMenu->setVisible(true);
 	mainMenu->setActive(true);
@@ -110,6 +111,18 @@ void CollisionTypes::initialize(HWND hwnd)
 	if (!youDiedTM.initialize(graphics,YOUDIED_IMAGE))
         throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing midground textures"));
 
+	//tutorial screens
+	if (!tut1TM.initialize(graphics,TUT1_IMAGE))
+        throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing tutorial"));
+	if (!tut2TM.initialize(graphics,TUT2_IMAGE))
+        throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing tutorial"));
+	if (!tut3TM.initialize(graphics,TUT3_IMAGE))
+        throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing tutorial"));
+	if (!tut4TM.initialize(graphics,TUT4_IMAGE))
+        throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing tutorial"));
+	if (!tut5TM.initialize(graphics,TUT5_IMAGE))
+        throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing tutorial"));
+
 	//INITIALIZE OBJECTS:
 
 	//if (!baseDestroyed.initialize(graphics, 0, 0, 0, &baseDestroyedTM))
@@ -122,6 +135,17 @@ void CollisionTypes::initialize(HWND hwnd)
 		throw(GameError(gameErrorNS::WARNING, "menu not initialized"));
 	if (!youDied.initialize(graphics, 0, 0, 0, &youDiedTM))
 		throw(GameError(gameErrorNS::WARNING, "menu not initialized"));
+
+	if (!tut1.initialize(graphics, 0, 0, 0, &tut1TM))
+		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
+	if (!tut2.initialize(graphics, 0, 0, 0, &tut2TM))
+		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
+	if (!tut3.initialize(graphics, 0, 0, 0, &tut3TM))
+		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
+	if (!tut4.initialize(graphics, 0, 0, 0, &tut4TM))
+		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
+	if (!tut5.initialize(graphics, 0, 0, 0, &tut5TM))
+		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
 
 	//AVATAR:
 	if (!avatar.initialize(this, avatarNS::WIDTH, avatarNS::HEIGHT, avatarNS::COLS, &avatarTM))
@@ -210,10 +234,13 @@ void CollisionTypes::initialize(HWND hwnd)
 	bar.setY(timeBar.getY()-1);
 
 	//SHIELD:
-	if (!shield.initialize(this, 0, 0, 0, &shieldTM))
+	if (!shield.initialize(this, shieldNS::WIDTH, shieldNS::HEIGHT, shieldNS::COLS, &shieldTM))
 			throw(GameError(gameErrorNS::WARNING, "shield not initialized"));
 	shield.setCollisionType(entityNS::BOX);
 	shield.setEdge(COLLISION_BOX_SHIELD); 
+	//shield.setFrames(shipNS::START_FRAME, shipNS::END_FRAME);
+	shield.setCurrentFrame(shipNS::START_FRAME);
+	//shield.setHealth(3);
 	
 
 	//ENEMY BULLETS
@@ -325,6 +352,7 @@ void CollisionTypes::initialize(HWND hwnd)
 	gameStates = menu;
 	gameStart = false;
 	showHighScores = false;
+	tutScreen = tutorial1;
 
 
 	//AUDIO
@@ -380,6 +408,17 @@ void CollisionTypes::gameStateUpdate()
 			initializeLevel();
 			gameStates = gamePlay;
 			timeInState = 0;
+		}
+		else if (gameStates==tutorial)
+		{
+			switch(tutScreen)
+			{
+			case tutorial1: tutScreen=tutorial2; break;
+			case tutorial2: tutScreen=tutorial3; break;
+			case tutorial3: tutScreen=tutorial4; break;
+			case tutorial4: tutScreen=tutorial5; break;
+			case tutorial5: tutScreen=tutorial1; gameStates=menu; break;
+			}
 		}
 	}
 	
@@ -449,7 +488,9 @@ void CollisionTypes::resetEverything()
 
 	marker.setVisible(false);
 	bungees[0].clear();
-	shield.setVisible(false);
+	
+	if(!shield.getAttached())
+		shield.setVisible(false);
 
 	for(int i = 0; i < 10; i++)
 	{
@@ -514,7 +555,7 @@ void CollisionTypes::initializeLevel()
 	{
 		audio->stopCue(MENU_SONG);
 		audio->playCue(LEVEL_1_SONG);
-
+		
 		enemyBulletSpeed = 300;
 		avatarBulletSpeed = 600;
 		//numTanks = 2;
@@ -528,7 +569,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = rand()%100 + 150;
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 3.0;
+		endLevelTime = 45.0;
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -613,11 +654,15 @@ void CollisionTypes::update()
 
 			// Exit Game chosen 
 			if (mainMenu->getSelectedItem() == "Exit Game")
-			PostQuitMessage(0);
+				PostQuitMessage(0);
 
 			// Start Game chosen
 			if (mainMenu->getSelectedItem() == "Start Game")
 				gameStart = true;
+
+			// Tutorial chosen
+			if (mainMenu->getSelectedItem() == "Tutorial")
+				gameStates = tutorial;
 
 			mainMenu->update();
 
@@ -634,6 +679,11 @@ void CollisionTypes::update()
 			
 			audio->stopCue(LEVEL_3_SONG);
 			audio->playCue(CREDITS_SONG);
+
+			shield.setAttached(false);
+			shield.setVisible(false);
+			shield.setActive(false);
+			shield.setCurrentFrame(0);
 			break;
 
 		case levelEnd:
@@ -647,15 +697,6 @@ void CollisionTypes::update()
 			//////////////////
 			// Keyboard Input
 			//////////////////
-
-			//if (input->isKeyDown(D_KEY))	// Right 
-			//	avatar.right();
-			//if (input->isKeyDown(A_KEY))	// Left 
-			//	avatar.left();
-			//if (input->isKeyDown(W_KEY))	// Up 
-			//	avatar.up();	
-			//if (input->isKeyDown(S_KEY))	// Down
-			//	avatar.down();
 
 			if (input->isKeyDown(D_KEY))   {// Right 
                 avatar.right();
@@ -687,18 +728,8 @@ void CollisionTypes::update()
 				depressedLastFrame = true;
 			}
 
-
-			//WAVES CODE HERE
-			if((timeLeftOnLevel < 45 && timeLeftOnLevel > 37) || (timeLeftOnLevel < 28 && timeLeftOnLevel > 17) || timeLeftOnLevel < 8)
-			{
-				shipSpawnRate = 100;
-				tankSpawnRate = 200;
-			}
-			if((timeLeftOnLevel < 37 && timeLeftOnLevel > 28) || (timeLeftOnLevel < 17 && timeLeftOnLevel > 8))
-			{
-				shipSpawnRate = 1;   //onslaught
-				tankSpawnRate = 60;
-			}
+			//HANDLES WAVES OF ENEMIES THROUGHOUT LEVEL
+			waves();
 
 		
 			//AT RANDOM TIME INTERVALS, call spawning enemy ships
@@ -718,7 +749,7 @@ void CollisionTypes::update()
 			}
 
 			//SPAWN SHIELD AT CERTAIN TIMES
-			spawnShield();
+			updateShield();
 
 	
 			shipsShoot();
@@ -745,32 +776,7 @@ void CollisionTypes::update()
 					marker.setVisible(true);
 				}
 				avatarBullets[i].setGroundLoc(0);
-			}
-
-
-			//SHIELD STATE STUFF:
-			if(shield.getAttached())
-			{
-				shield.setX(avatar.getCenterX()-shield.getScaleX()*shield.getWidth()/2);
-				shield.setY(avatar.getCenterY()-shield.getScaleY()*shield.getHeight()/2);
-			}
-			if(!shield.getAttached())
-			{
-				shield.setScaleX(.2);
-				shield.setScaleY(.2);
-			}
-			else
-			{
-				shield.setScaleX(shieldNS::SCALE);
-				shield.setScaleY(shieldNS::SCALE);
-			}
-			if(shield.getHealth()<=0)
-			{
-				shield.setAttached(false);
-				shield.setVisible(false);
-				shield.setActive(false);
-			}
-						
+			}					
 	
 			//////////////////
 			// Update Objects
@@ -810,19 +816,65 @@ void CollisionTypes::update()
 	}
 	
 }
-void CollisionTypes::spawnShield()
+void CollisionTypes::waves()
 {
-	if(!shield.getVisible())
+	if((timeLeftOnLevel < 45 && timeLeftOnLevel > 37) || (timeLeftOnLevel < 28 && timeLeftOnLevel > 17) || timeLeftOnLevel < 8)
+	{
+		shipSpawnRate = 100;
+		tankSpawnRate = 200;
+	}
+	if((timeLeftOnLevel < 37 && timeLeftOnLevel > 28) || (timeLeftOnLevel < 17 && timeLeftOnLevel > 8))
+	{
+		shipSpawnRate = 1;   //onslaught
+		tankSpawnRate = 60;
+	}
+}
+
+void CollisionTypes::updateShield()
+{
+	//SHIELD STATE STUFF:
+	if(shield.getAttached())
+	{
+		shield.setX(avatar.getCenterX()-shield.getScaleX()*shield.getWidth()/2);
+		shield.setY(avatar.getCenterY()-shield.getScaleY()*shield.getHeight()/2);
+	}
+	if(!shield.getAttached())
+	{
+		shield.setScaleX(.2);
+		shield.setScaleY(.2);
+	}
+	else
+	{
+		shield.setScaleX(shieldNS::SCALE);
+		shield.setScaleY(shieldNS::SCALE);
+	}
+	int temp = shield.getHealth();
+	bool tem = shield.getAttached();
+
+	if(shield.getHealth()==3)
+		shield.setCurrentFrame(0);
+	if(shield.getHealth()==2)
+		shield.setCurrentFrame(1);
+	if(shield.getHealth()==1)
+		shield.setCurrentFrame(2);
+	if(shield.getHealth()<=0)
+	{
+		shield.setAttached(false);
+		shield.setVisible(false);
+		shield.setActive(false);
+		shield.setCurrentFrame(0);
+	}
+
+	if(!shield.getVisible() && ((timeLeftOnLevel > 39 && timeLeftOnLevel < 40) || (timeLeftOnLevel > 19 && timeLeftOnLevel <20))) //CORRESPONDS TO WAVES
 		{
 			//shipSpawnTime = GetTickCount();
-			shield.setHealth(2);
+			shield.setHealth(3);
 			shield.setPosition(VECTOR2(GAME_WIDTH+100, rand()%500));
 			shield.setX(shield.getPositionX());
 			shield.setY(shield.getPositionY());
 			shield.setVelocity(VECTOR2(-shieldNS::SPEED,0));
 			shield.setVisible(true);
 			shield.setActive(true);
-
 		}
 }
 
@@ -1178,12 +1230,11 @@ void CollisionTypes::getScores()
 	}
 	inFile.close();
 }
-
 void CollisionTypes::outputScores(std::string s)
 {
 	std::stringstream scoreStream;
 
-	highScores.push_back(HighScoreEntry(s, score));
+	highScores.push_back(HighScoreEntry(s, totalScore));
 
 	std::sort( highScores.begin(), highScores.end() );
 	
@@ -1219,7 +1270,6 @@ void CollisionTypes::collisions()
 	if(avatar.collidesWith(shield, collisionVector))
 	{
 		shield.setAttached(true);
-		shield.setHealth(2);
 	}
 	//between shield and enemy bullets
 	if(shield.getAttached())
@@ -1581,6 +1631,16 @@ void CollisionTypes::render()
 		case quit:
 			break;
 
+		case tutorial:
+			switch(tutScreen)
+			{
+			case tutorial1: tut1.draw(); break;
+			case tutorial2: tut2.draw(); break;
+			case tutorial3: tut3.draw(); break;
+			case tutorial4: tut4.draw(); break;
+			case tutorial5: tut5.draw(); break;
+			}
+
 		case restart:
 			if(avatar.getDead())
 				youDied.draw();
@@ -1607,7 +1667,7 @@ void CollisionTypes::render()
 				scoreText.print(scoreStream.str(), GAME_WIDTH/2+80, GAME_HEIGHT/2-30);
 			}
 
-			if(timeInState > 5)
+			if(showHighScores && timeInState > 5)
 				credits.draw();
 
 			break;

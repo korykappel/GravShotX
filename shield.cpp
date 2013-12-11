@@ -25,7 +25,7 @@ Shield::Shield() : Entity()
 	edge.left = shieldNS::WIDTH/2;
 
 	attached = false;
-	health = 0;
+	health = 3;
 }
 
 //=============================================================================

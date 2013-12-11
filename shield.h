@@ -7,16 +7,14 @@
 
 namespace shieldNS
 {
-    const int WIDTH = 64;                   // image width
-    const int HEIGHT = 64;                  // image height
+    const int WIDTH = 120;                   // image width
+    const int HEIGHT = 120;                  // image height
     const int X = GAME_WIDTH/2 - WIDTH/2;   // location on screen
     const int Y = GAME_HEIGHT/2 - HEIGHT/2;
     const float SPEED = 120;      
-	/*const int COLS = 3;
+	const int COLS = 3;
 	const int START_FRAME = 0;
-	const int END_FRAME = 0;
-	const int FLY_START = 0;
-	const int FLY_END = 2;*/
+	const int END_FRAME = 2;
 	const int SCALE = 1;
 }
 
@@ -50,8 +48,8 @@ public:
 	void setAttached(bool m) {attached = m;}
 	bool getAttached() {return attached;}
 
-	void setHealth(bool m) {health = m;}
-	bool getHealth() {return health;}
+	void setHealth(int m) {health = m;}
+	int getHealth() {return health;}
 };
 #endif
 

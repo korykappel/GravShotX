@@ -121,6 +121,13 @@ const char ENDSCREEN_IMAGE[] = "pictures\\End Screen.png";
 const char LEVELCOMPLETE_IMAGE[] = "pictures\\Level Complete.png";
 const char YOUDIED_IMAGE[] = "pictures\\You Died.png";
 
+//tutorial screens
+const char TUT1_IMAGE[] = "pictures\\tut1.png";
+const char TUT2_IMAGE[] = "pictures\\tut2.png";
+const char TUT3_IMAGE[] = "pictures\\tut3.png";
+const char TUT4_IMAGE[] = "pictures\\tut4.png";
+const char TUT5_IMAGE[] = "pictures\\tut5.png";
+
 
 // key mappings
 // In this game simple constants are used for key mappings. If variables were used
@@ -164,6 +171,6 @@ const char AVATAR_EXPLOSION[] = "Explosion 4";
 
 enum BungeeStates {none, enemyToEnemy, enemyToGround};
 enum Type {SHIP, TANK};
-enum GameStates {menu, gamePlay, quit, restart, win, levelEnd};
+enum GameStates {menu, gamePlay, quit, restart, win, levelEnd, tutorial};
 
 #endif
