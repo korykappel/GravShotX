@@ -556,14 +556,14 @@ void CollisionTypes::initializeLevel()
 		audio->stopCue(MENU_SONG);
 		audio->playCue(LEVEL_1_SONG);
 		
-		enemyBulletSpeed = 300;
+		enemyBulletSpeed = 400;
 		avatarBulletSpeed = 600;
 		//numTanks = 2;
 		numTanks = 0;
-		numShips = 4;
+		numShips = 6;
 		//numTankBullets = 2;
-		numTankBullets = 2;
-		numShipBullets = 3;
+		numTankBullets = 0;
+		numShipBullets = 8;
 		numAvatarBullets = 3;
 		//tankSpeed = 80;
 		//shipSpeed = rand()%100 + 150;
@@ -584,18 +584,18 @@ void CollisionTypes::initializeLevel()
 		audio->stopCue(LEVEL_1_SONG);
 		audio->playCue(LEVEL_2_SONG);
 
-		enemyBulletSpeed = 300;
+		enemyBulletSpeed = 400;
 		avatarBulletSpeed = 600;
 		numTanks = 2;
-		numShips = 5;
-		numTankBullets = 2;
-		numShipBullets = 3;	
+		numShips = 6;
+		numTankBullets = 4;
+		numShipBullets = 10;	
 		numAvatarBullets = 3;
 		tankSpeed = 100;
 		//shipSpeed = 150;		
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 3.0; 
+		endLevelTime = 45.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -609,18 +609,18 @@ void CollisionTypes::initializeLevel()
 		audio->stopCue(LEVEL_2_SONG);
 		audio->playCue(LEVEL_3_SONG);
 
-		enemyBulletSpeed = 300;
+		enemyBulletSpeed = 450;
 		avatarBulletSpeed = 600;
-		numTanks = 3;
+		numTanks = 4;
 		numShips = 7;
-		numTankBullets = 2;
-		numShipBullets = 3;
+		numTankBullets = 6;
+		numShipBullets = 10;
 		numAvatarBullets = 3;
 		tankSpeed = 100;
 		//shipSpeed = 180;		
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 3.0; 
+		endLevelTime = 45.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 		
@@ -735,7 +735,11 @@ void CollisionTypes::update()
 			//AT RANDOM TIME INTERVALS, call spawning enemy ships
 			if(GetTickCount() - 1000 > shipSpawnTime)
 			{
-				tempRand = rand()%shipSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
+				if (shipSpawnRate == 0)
+					tempRand = 1;
+				else
+					tempRand = rand()%shipSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
+
 				if(tempRand == 0)
 					spawnEnemyShip();
 			}
@@ -743,7 +747,11 @@ void CollisionTypes::update()
 			//AT RANDOM TIME INTERVALS, call spawning enemy ships
 			if(GetTickCount() - 1000 > tankSpawnTime)
 			{
-				tempRand = rand()%tankSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
+				if (tankSpawnRate == 0)
+					tempRand = 1;
+				else
+					tempRand = rand()%tankSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
+
 				if(tempRand == 0)
 					spawnEnemyTank();
 			}
@@ -818,15 +826,15 @@ void CollisionTypes::update()
 }
 void CollisionTypes::waves()
 {
-	if((timeLeftOnLevel < 45 && timeLeftOnLevel > 37) || (timeLeftOnLevel < 28 && timeLeftOnLevel > 17) || timeLeftOnLevel < 8)
+	if((timeLeftOnLevel < 35 && timeLeftOnLevel > 30) || (timeLeftOnLevel < 20 && timeLeftOnLevel > 15) || timeLeftOnLevel < 3)
 	{
-		shipSpawnRate = 100;
-		tankSpawnRate = 200;
+		shipSpawnRate = 0;
+		tankSpawnRate = 0;
 	}
-	if((timeLeftOnLevel < 37 && timeLeftOnLevel > 28) || (timeLeftOnLevel < 17 && timeLeftOnLevel > 8))
+	if((timeLeftOnLevel < 45 && timeLeftOnLevel > 35) || (timeLeftOnLevel < 30 && timeLeftOnLevel > 20) || (timeLeftOnLevel < 15 && timeLeftOnLevel > 5))
 	{
 		shipSpawnRate = 1;   //onslaught
-		tankSpawnRate = 60;
+		tankSpawnRate = 15;
 	}
 }
 
@@ -1169,11 +1177,11 @@ void CollisionTypes::resetEnemy(Enemy* enemy)
 void CollisionTypes::spawnEnemyShip()
 {
 	if(level == 1)
-		shipSpeed = rand()%100 + 150;
-	if(level == 2)
 		shipSpeed = rand()%100 + 155;
-	if(level == 3)
+	if(level == 2)
 		shipSpeed = rand()%100 + 165;
+	if(level == 3)
+		shipSpeed = rand()%100 + 175;
 	//random y location
 	//set enemy location and visible and velocity
 	for(int i = 0; i < numShips; i++)
@@ -1755,7 +1763,7 @@ void CollisionTypes::render()
 			font.print(marked.str(), 20, 20);
 
 			bar.draw();
-			timeBar.setScaleX(timeLeftOnLevel*(100.0/45.0));
+			timeBar.setScaleX(timeLeftOnLevel*(100.0/endLevelTime));
 			timeBar.draw();
 
 			//display score indicators if needed
