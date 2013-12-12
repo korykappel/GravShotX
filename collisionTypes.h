@@ -31,7 +31,7 @@ class CollisionTypes;
 
 using namespace std;
 
-enum TutorialScreen {tutorial1, tutorial2, tutorial3, tutorial4, tutorial5};
+enum TutorialScreen {tutorial1, tutorial2, tutorial3, tutorial4, tutorial5, NONE};
 
 //=============================================================================
 // This class is the core of the game

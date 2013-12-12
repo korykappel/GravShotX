@@ -58,7 +58,8 @@ void Enemy::update(float frameTime)
 		setVelocity(VECTOR2(0,0));
 		if(!bungeed)
 		{
-			visible = false;
+			visible = false; 
+			active = false;
 
 			//if(marked)
 			//{

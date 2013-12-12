@@ -352,7 +352,7 @@ void CollisionTypes::initialize(HWND hwnd)
 	gameStates = menu;
 	gameStart = false;
 	showHighScores = false;
-	tutScreen = tutorial1;
+	tutScreen = NONE;
 
 
 	//AUDIO
@@ -371,7 +371,7 @@ void CollisionTypes::gameStateUpdate()
 
 	if(input->isKeyDown(ENTER_KEY))
 		enterDepressedLastFrame = true;
-	if (!input->isKeyDown(VK_RETURN) && enterDepressedLastFrame)
+	if (!input->isKeyDown(ENTER_KEY) && enterDepressedLastFrame)
 	{
 		enterDepressedLastFrame = false;
 		if(gameStates == levelEnd)
@@ -413,11 +413,12 @@ void CollisionTypes::gameStateUpdate()
 		{
 			switch(tutScreen)
 			{
+			case NONE: tutScreen=tutorial1; break;
 			case tutorial1: tutScreen=tutorial2; break;
 			case tutorial2: tutScreen=tutorial3; break;
 			case tutorial3: tutScreen=tutorial4; break;
 			case tutorial4: tutScreen=tutorial5; break;
-			case tutorial5: tutScreen=tutorial1; gameStates=menu; break;
+			case tutorial5: tutScreen=NONE; gameStates=menu; break;
 			}
 		}
 	}
@@ -449,12 +450,6 @@ void CollisionTypes::gameStateUpdate()
 		}
 	}
 	else if(gameStates == restart && input->isKeyDown(0x4D))  //go back to menu
-	{
-		gameStates = menu;
-		gameStart = false;
-		timeInState = 0;
-	}
-	else if(gameStates == win && input->isKeyDown(0x4D))
 	{
 		gameStates = menu;
 		gameStart = false;
@@ -595,7 +590,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = 150;		
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 45.0; 
+		endLevelTime = 3.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -620,7 +615,7 @@ void CollisionTypes::initializeLevel()
 		//shipSpeed = 180;		
 		//tankSpawnRate = 10;
 		//shipSpawnRate = 10;
-		endLevelTime = 45.0; 
+		endLevelTime = 3.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 		
@@ -661,7 +656,7 @@ void CollisionTypes::update()
 				gameStart = true;
 
 			// Tutorial chosen
-			if (mainMenu->getSelectedItem() == "Tutorial")
+			if (enterDepressedLastFrame && mainMenu->getSelectedItem() == "Tutorial")
 				gameStates = tutorial;
 
 			mainMenu->update();
@@ -856,8 +851,6 @@ void CollisionTypes::updateShield()
 		shield.setScaleX(shieldNS::SCALE);
 		shield.setScaleY(shieldNS::SCALE);
 	}
-	int temp = shield.getHealth();
-	bool tem = shield.getAttached();
 
 	if(shield.getHealth()==3)
 		shield.setCurrentFrame(0);
