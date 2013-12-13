@@ -29,6 +29,7 @@ Enemy::Enemy() : Entity()
 	needsReset = false;
 	fontDisplayFrameCount = 0;
 	scoreToDisplay = 0;
+
 }
 
 //=============================================================================
@@ -36,8 +37,9 @@ Enemy::Enemy() : Entity()
 // Post: returns true if successful, false if failed
 //=============================================================================
 bool Enemy::initialize(Game *gamePtr, int width, int height, int ncols,
-    TextureManager *textureM)
+    TextureManager *textureM, TextDX* font)
 {
+	scoreIndicator = font;
     return(Entity::initialize(gamePtr, width, height, ncols, textureM));
 }
 
@@ -58,7 +60,7 @@ void Enemy::update(float frameTime)
 		setVelocity(VECTOR2(0,0));
 		if(!bungeed)
 		{
-			visible = false; 
+			visible = false;
 			active = false;
 
 			//if(marked)

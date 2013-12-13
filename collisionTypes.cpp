@@ -11,6 +11,7 @@
 //=============================================================================
 CollisionTypes::CollisionTypes()
 {
+	//nothing here, move on
 	scoreIndicator = new TextDX();
 }
 
@@ -50,6 +51,9 @@ void CollisionTypes::initialize(HWND hwnd)
 
 	if (!enemyShipTM.initialize(graphics,ENEMYSHIP_IMAGE))
         throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing enemy textures"));
+
+	if (!bossTM.initialize(graphics, BOSS_IMAGE))
+		throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing boss texture"));
 
 	if (!shieldTM.initialize(graphics,SHIELD_IMAGE))
         throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing shield textures"));
@@ -123,6 +127,8 @@ void CollisionTypes::initialize(HWND hwnd)
 	if (!tut5TM.initialize(graphics,TUT5_IMAGE))
         throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing tutorial"));
 
+
+
 	//INITIALIZE OBJECTS:
 
 	//if (!baseDestroyed.initialize(graphics, 0, 0, 0, &baseDestroyedTM))
@@ -146,6 +152,7 @@ void CollisionTypes::initialize(HWND hwnd)
 		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
 	if (!tut5.initialize(graphics, 0, 0, 0, &tut5TM))
 		throw(GameError(gameErrorNS::WARNING, "tutorial not initialized"));
+
 
 	//AVATAR:
 	if (!avatar.initialize(this, avatarNS::WIDTH, avatarNS::HEIGHT, avatarNS::COLS, &avatarTM))
@@ -227,20 +234,32 @@ void CollisionTypes::initialize(HWND hwnd)
 	timeBar.setX(23);
 	timeBar.setY(77);
 
+	//BOSS HEALTH 
+
+	if (!bossHealth.initialize(graphics, 0, 0, 0, &timeTM)) 
+			throw(GameError(gameErrorNS::WARNING, "boss health not initialized"));
+	bossHealth.setX(bossNS::X + (bossNS::WIDTH/5));
+	bossHealth.setY(bossNS::Y - 20);
+
 	//BAR
 	if (!bar.initialize(graphics, 0, 0, 0, &barTM))
 			throw(GameError(gameErrorNS::WARNING, "bar not initialized"));
 	bar.setX(timeBar.getX()-2);
 	bar.setY(timeBar.getY()-1);
 
+
+	//BOSS BAR
+	if (!bossHealthBar.initialize(graphics, 0, 0, 0, &barTM))
+			throw(GameError(gameErrorNS::WARNING, "bar not initialized"));
+	bossHealthBar.setX(bossHealth.getX()-2);
+	bossHealthBar.setY(bossHealth.getY()-1);
+
 	//SHIELD:
 	if (!shield.initialize(this, shieldNS::WIDTH, shieldNS::HEIGHT, shieldNS::COLS, &shieldTM))
 			throw(GameError(gameErrorNS::WARNING, "shield not initialized"));
 	shield.setCollisionType(entityNS::BOX);
 	shield.setEdge(COLLISION_BOX_SHIELD); 
-	//shield.setFrames(shipNS::START_FRAME, shipNS::END_FRAME);
 	shield.setCurrentFrame(shipNS::START_FRAME);
-	//shield.setHealth(3);
 	
 
 	//ENEMY BULLETS
@@ -257,6 +276,15 @@ void CollisionTypes::initialize(HWND hwnd)
 			throw(GameError(gameErrorNS::WARNING, "bullet not initialized"));
 			tankBullets[i].setCollisionType(entityNS::BOX);
 			tankBullets[i].setEdge(COLLISION_BOX_BULLET);
+	}
+
+	//BOSS BULLETS
+	for (int i = 0; i < 10; i++) {
+		if (!bossBullets[i].initialize(this, bulletNS::WIDTH, bulletNS::HEIGHT, 0, &enemyBulletTM)) {
+			throw(GameError(gameErrorNS::WARNING, "bullet not initialized"));
+		}
+		bossBullets[i].setCollisionType(entityNS::BOX);
+		bossBullets[i].setEdge(COLLISION_BOX_BULLET);
 	}
 
 	//AVATAR BULLETS
@@ -296,6 +324,25 @@ void CollisionTypes::initialize(HWND hwnd)
 		//enemies[i+5] = &enemyTanks[i];
 	}
 
+	//for(int i = 0; i < 4; i++)
+	//{
+		//if(scoreIndicators[0]->initialize(graphics, 20, true, false, "Small Fonts") == false)
+		//	throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing DirectX font"));
+		
+		scoreIndicator->initialize(graphics, 30, true, false, "Small Fonts");
+		scoreIndicator->setFontColor(graphicsNS::YELLOW);
+	//}
+
+
+
+
+	//BOSSES:
+		if (!boss.initialize(this, bossNS::WIDTH, bossNS::HEIGHT, 0, &bossTM))
+			throw(GameError(gameErrorNS::WARNING, "Boss not initialized"));
+		boss.setCollisionType(entityNS::BOX);
+		boss.setEdge(COLLISION_BOX_BOSS);
+		boss.setType(BOSS);
+
 	//EXPLOSIONS
 	for (int i=0; i<10; i++)
 	{
@@ -317,15 +364,7 @@ void CollisionTypes::initialize(HWND hwnd)
         throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing DirectX font"));
 	scoreText.setFontColor(graphicsNS::YELLOW);
 
-
-	//for(int i = 0; i < 4; i++)
-	//{
-		//if(scoreIndicators[0]->initialize(graphics, 20, true, false, "Small Fonts") == false)
-		//	throw(GameError(gameErrorNS::FATAL_ERROR, "Error initializing DirectX font"));
-		
-		scoreIndicator->initialize(graphics, 30, true, false, "Small Fonts");
-		scoreIndicator->setFontColor(graphicsNS::YELLOW);
-	//}
+	
 
 
 	//MISC.
@@ -333,7 +372,7 @@ void CollisionTypes::initialize(HWND hwnd)
 	score = 0;
 	invincibility = false;
 	totalScore = 0;
-	
+	bossPointer = &boss;
 	
 	//currentlyHit1 = NULL;
 	//currentlyHit2 = NULL;
@@ -354,7 +393,6 @@ void CollisionTypes::initialize(HWND hwnd)
 	showHighScores = false;
 	tutScreen = NONE;
 
-
 	//AUDIO
 	audio->playCue(MENU_SONG);
 
@@ -367,7 +405,9 @@ void CollisionTypes::initialize(HWND hwnd)
 void CollisionTypes::gameStateUpdate()
 {
 	timeInState += frameTime;
-	timeLeftOnLevel -= frameTime;
+	if (gameStates != bossBattle) {   // Dont update time if its in a boss battle, time stops and set to 0 below.
+		timeLeftOnLevel -= frameTime;  
+	}
 
 	if(input->isKeyDown(ENTER_KEY))
 		enterDepressedLastFrame = true;
@@ -378,6 +418,8 @@ void CollisionTypes::gameStateUpdate()
 		{
 			level++;
 			initializeLevel();
+			preBossScore = 0;
+			score = 0;
 			gameStates = gamePlay;
 			timeInState = 0;
 		}
@@ -386,6 +428,18 @@ void CollisionTypes::gameStateUpdate()
 			initializeLevel();
 			gameStates = gamePlay;
 			timeInState = 0;
+			score = 0;
+		}
+		else if(gameStates== restartFromCheckpoint)
+		{
+			initializeLevel();
+			timeLeftOnLevel = 0;
+			gameStates = bossBattle;
+			boss.setDead(false);
+			boss.setVisible(true);
+			boss.setActive(true);
+			timeInState = 0;
+			score = preBossScore;
 		}
 		else if(gameStates == win && showHighScores)
 		{
@@ -401,6 +455,7 @@ void CollisionTypes::gameStateUpdate()
 			outputScores(input->getTextIn());
 			highScores.resize(9,HighScoreEntry("---",0));
 		}
+
 		else if (gameStates==menu && gameStart)
 		{
 			
@@ -422,26 +477,49 @@ void CollisionTypes::gameStateUpdate()
 			}
 		}
 	}
-	
-	else if (gameStates==gamePlay && input->isKeyDown(VK_ESCAPE))
+	else if (input->isKeyDown(VK_ESCAPE))   //PUT THIS IN UPDATE
 	{
 		gameStates = quit;
 		timeInState = 0;
 	}
-	else if(gameStates == gamePlay && level == 3 && timeInState >= endLevelTime)  //GetTickCount()-startLevelTime >= endLevelTime
-	{
-		totalScore += score;
-		gameStates = win;
-		timeInState = 0;
-		input->clearTextIn();
-	}
-	else if (gameStates==gamePlay && (timeInState > endLevelTime) && (level != 3))  //GetTickCount()-startLevelTime >= endLevelTime
-	{
+	else if (gameStates == gamePlay && (timeInState > endLevelTime)) {       //**********level has ended, time for boss battle*********
 		
-		gameStates = levelEnd;
+		gameStates = bossBattle;
 		timeInState = 0;
+		boss.setVisible(true);
+		boss.setActive(true);
+		boss.setDead(false);
+		preBossScore = score;
+		//maybe update time here?
+		timeLeftOnLevel = 0;
 	}
-	else if(gameStates == gamePlay && avatar.getDead())
+	else if(gameStates == bossBattle && boss.isDead()) {
+		gameStates = levelEnd;
+		//boss.setVisible(false);
+		//boss.setActive(false);
+		boss.setDead(false);
+		timeInState = 0;
+		if (level == 3) {
+			gameStates = win;
+			totalScore += score;
+			timeInState = 0;
+			input->clearTextIn();
+		}
+	}/*
+	else if (gameStates==tutorial)
+	{
+		switch(tutScreen)
+		{
+		case NONE: tutScreen=tutorial1; break;
+		case tutorial1: tutScreen=tutorial2; break;
+		case tutorial2: tutScreen=tutorial3; break;
+		case tutorial3: tutScreen=tutorial4; break;
+		case tutorial4: tutScreen=tutorial5; break;
+		case tutorial5: tutScreen=NONE; gameStates=menu; break;
+		}
+	}*/
+
+	else if(gameStates == gamePlay  && avatar.getDead())
 	{
 		if(GetTickCount() - crashedTime >= 1000)
 		{
@@ -449,7 +527,17 @@ void CollisionTypes::gameStateUpdate()
 			timeInState = 0;
 		}
 	}
-	else if(gameStates == restart && input->isKeyDown(0x4D))  //go back to menu
+	else if(gameStates==bossBattle && avatar.getDead())
+	{
+		if(GetTickCount() - crashedTime >= 1000)
+		{
+			gameStates = restartFromCheckpoint;
+		}
+		//score = preBossScore;
+		
+		timeInState = 0;
+	}
+	else if((gameStates == restart || gameStates == restartFromCheckpoint) && input->isKeyDown(0x4D))  //go back to menu
 	{
 		gameStates = menu;
 		gameStart = false;
@@ -470,6 +558,8 @@ void CollisionTypes::resetEverything()
 	avatar.setVisible(true);
 	avatar.setActive(true);
 	avatar.setVelocity(VECTOR2(0,0));
+	boss.setX(bossNS::X);
+	boss.setY(bossNS::Y);
 	currentlyHit1 = NULL;
 	currentlyHit2 = NULL;
 	numMarked = 0;
@@ -483,16 +573,18 @@ void CollisionTypes::resetEverything()
 
 	marker.setVisible(false);
 	bungees[0].clear();
-	
+	shield.setVisible(false);
 	if(!shield.getAttached())
 		shield.setVisible(false);
-
+	
 	for(int i = 0; i < 10; i++)
 	{
 		shipBullets[i].setVisible(false);
 		shipBullets[i].setActive(false);
 		tankBullets[i].setVisible(false);
 		tankBullets[i].setActive(false);
+		bossBullets[i].setVisible(false);
+		bossBullets[i].setActive(false);
 	}
 	for(int i = 0; i < 3; i++)
 	{
@@ -510,6 +602,13 @@ void CollisionTypes::resetEverything()
 		enemyTanks[i].setMarked(false);
 		enemyTanks[i].setBungeed(false);
 	}
+
+	boss.setVisible(false);
+	boss.setActive(false);
+	boss.setMarked(false);
+	boss.setLocked(false);
+	boss.setBungeed(false);
+
 	for(int i = 0; i < 10; i++)
 	{
 		explosion[i].setVisible(false);
@@ -548,49 +647,56 @@ void CollisionTypes::initializeLevel()
 
 	if(level == 1)
 	{
+		boss.setCurrentLevel(level);
+		boss.setInitialState(bossNS::LEFT);
+		boss.setHealth(100);
+
 		audio->stopCue(MENU_SONG);
 		audio->playCue(LEVEL_1_SONG);
-		
-		enemyBulletSpeed = 400;
+		enemyBulletSpeed = 300;
 		avatarBulletSpeed = 600;
-		//numTanks = 2;
-		numTanks = 0;
-		numShips = 6;
-		//numTankBullets = 2;
-		numTankBullets = 0;
-		numShipBullets = 8;
+		numTanks = 2;
+		numShips = 3;
+		numTankBullets = 2;
+		numShipBullets = 3;
+		numBossBullets = 10;
 		numAvatarBullets = 3;
-		//tankSpeed = 80;
+		tankSpeed = 80;
 		//shipSpeed = rand()%100 + 150;
-		//tankSpawnRate = 10;
-		//shipSpawnRate = 10;
-		endLevelTime = 45.0;
+		tankSpawnRate = 10;
+		shipSpawnRate = 10;
+		endLevelTime = 10.0;
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
+		
 		for(int i = 0; i < numShips; i++)
 			enemies[i] = &enemyShips[i];
 		for(int i = 0; i < numTanks; i++)
 			enemies[i+numShips] = &enemyTanks[i];
-
 	}
 	else if(level == 2)
 	{
 		audio->stopCue(LEVEL_1_SONG);
 		audio->playCue(LEVEL_2_SONG);
 
-		enemyBulletSpeed = 400;
+		boss.setCurrentLevel(level);
+		boss.setInitialState(bossNS::LEFT);
+		boss.setHealth(100);
+
+		enemyBulletSpeed = 300;
 		avatarBulletSpeed = 600;
-		numTanks = 2;
-		numShips = 6;
-		numTankBullets = 4;
-		numShipBullets = 10;	
+		numTanks = 3;
+		numShips = 3;
+		numTankBullets = 2;
+		numShipBullets = 3;	
+		numBossBullets = 7;
 		numAvatarBullets = 3;
 		tankSpeed = 100;
 		//shipSpeed = 150;		
-		//tankSpawnRate = 10;
-		//shipSpawnRate = 10;
-		endLevelTime = 3.0; 
+		tankSpawnRate = 10;
+		shipSpawnRate = 10;
+		endLevelTime = 10.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 
@@ -601,21 +707,25 @@ void CollisionTypes::initializeLevel()
 	}
 	else if(level == 3)
 	{
+		boss.setCurrentLevel(level);
+		boss.setInitialState(bossNS::TRACK);
+		boss.setHealth(100);
+
 		audio->stopCue(LEVEL_2_SONG);
 		audio->playCue(LEVEL_3_SONG);
-
-		enemyBulletSpeed = 450;
+		enemyBulletSpeed = 300;
 		avatarBulletSpeed = 600;
-		numTanks = 4;
-		numShips = 7;
-		numTankBullets = 6;
-		numShipBullets = 10;
+		numTanks = 3;
+		numShips = 4;
+		numTankBullets = 2;
+		numShipBullets = 3;
+		numBossBullets = 10;
 		numAvatarBullets = 3;
 		tankSpeed = 100;
 		//shipSpeed = 180;		
-		//tankSpawnRate = 10;
-		//shipSpawnRate = 10;
-		endLevelTime = 3.0; 
+		tankSpawnRate = 10;
+		shipSpawnRate = 10;
+		endLevelTime = 10.0; 
 		timeLeftOnLevel = endLevelTime;
 		startLevelTime = GetTickCount();
 		
@@ -644,6 +754,7 @@ void CollisionTypes::update()
 
 			score = 0;
 			totalScore = 0;
+			preBossScore = 0;
 
 			audio->stopCue(CREDITS_SONG);
 
@@ -655,9 +766,9 @@ void CollisionTypes::update()
 			if (mainMenu->getSelectedItem() == "Start Game")
 				gameStart = true;
 
-			// Tutorial chosen
 			if (enterDepressedLastFrame && mainMenu->getSelectedItem() == "Tutorial")
 				gameStates = tutorial;
+
 
 			mainMenu->update();
 
@@ -667,7 +778,9 @@ void CollisionTypes::update()
 			break;
 
 		case restart:
-			score = 0;
+		case restartFromCheckpoint:
+			//score = 0;
+			score = preBossScore;
 			break;
 
 		case win: 
@@ -679,12 +792,21 @@ void CollisionTypes::update()
 			shield.setVisible(false);
 			shield.setActive(false);
 			shield.setCurrentFrame(0);
+
 			break;
 
 		case levelEnd:
 			totalScore += score;
 			score = 0;
 			break;
+
+		case bossBattle:
+
+			//bosses[level-1].setActive(true);
+			//bosses[level-1].setVisible(true);
+			boss.update(frameTime, avatar.getX(), avatar.getY(), avatar.getCenterPoint());
+
+			bossShoot();
 			
 		case gamePlay:
 		{
@@ -722,19 +844,13 @@ void CollisionTypes::update()
 			if (!input->getMouseLButton()) {
 				depressedLastFrame = true;
 			}
-
-			//HANDLES WAVES OF ENEMIES THROUGHOUT LEVEL
+			// HANDLE WAVES OF ENEMY THROUGHOUT LEVEL
 			waves();
-
 		
 			//AT RANDOM TIME INTERVALS, call spawning enemy ships
 			if(GetTickCount() - 1000 > shipSpawnTime)
 			{
-				if (shipSpawnRate == 0)
-					tempRand = 1;
-				else
-					tempRand = rand()%shipSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
-
+				tempRand = rand()%shipSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
 				if(tempRand == 0)
 					spawnEnemyShip();
 			}
@@ -742,11 +858,7 @@ void CollisionTypes::update()
 			//AT RANDOM TIME INTERVALS, call spawning enemy ships
 			if(GetTickCount() - 1000 > tankSpawnTime)
 			{
-				if (tankSpawnRate == 0)
-					tempRand = 1;
-				else
-					tempRand = rand()%tankSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
-
+				tempRand = rand()%tankSpawnRate;  //MAKE VALUES DEPENDING ON LEVEL
 				if(tempRand == 0)
 					spawnEnemyTank();
 			}
@@ -761,14 +873,11 @@ void CollisionTypes::update()
 			shipToGround();
 			createBungee();
 
-			//reset enemies
 			for(int i = 0; i < numShips+numTanks; i++)
 			{
 				if(enemies[i]->getNeedsReset())   
 					resetEnemy(enemies[i]);
 			}
-
-
 			for(int i = 0; i < numAvatarBullets; i++)
 			{
 				int tempGroundLoc = avatarBullets[i].getGroundLoc();
@@ -779,7 +888,8 @@ void CollisionTypes::update()
 					marker.setVisible(true);
 				}
 				avatarBullets[i].setGroundLoc(0);
-			}					
+			}
+			
 	
 			//////////////////
 			// Update Objects
@@ -804,6 +914,9 @@ void CollisionTypes::update()
 			for (int i = 0; i<numTankBullets; i++)
 				tankBullets[i].update(frameTime);
 
+			for (int i = 0; i < numBossBullets; i++) 
+				bossBullets[i].update(frameTime);
+
 			for (int i = 0; i<10; i++)
 			{
 				if (explosion[i].getAnimationComplete())
@@ -819,17 +932,16 @@ void CollisionTypes::update()
 	}
 	
 }
-void CollisionTypes::waves()
-{
-	if((timeLeftOnLevel < 35 && timeLeftOnLevel > 30) || (timeLeftOnLevel < 20 && timeLeftOnLevel > 15) || timeLeftOnLevel < 3)
+void CollisionTypes::waves() {
+	if((timeLeftOnLevel < 45 && timeLeftOnLevel > 37) || (timeLeftOnLevel < 28 && timeLeftOnLevel > 17) || timeLeftOnLevel < 8)
 	{
-		shipSpawnRate = 0;
-		tankSpawnRate = 0;
+		shipSpawnRate = 100;
+		tankSpawnRate = 200;
 	}
-	if((timeLeftOnLevel < 45 && timeLeftOnLevel > 35) || (timeLeftOnLevel < 30 && timeLeftOnLevel > 20) || (timeLeftOnLevel < 15 && timeLeftOnLevel > 5))
+	if((timeLeftOnLevel < 37 && timeLeftOnLevel > 28) || (timeLeftOnLevel < 17 && timeLeftOnLevel > 8))
 	{
 		shipSpawnRate = 1;   //onslaught
-		tankSpawnRate = 15;
+		tankSpawnRate = 60;
 	}
 }
 
@@ -870,14 +982,14 @@ void CollisionTypes::updateShield()
 		{
 			//shipSpawnTime = GetTickCount();
 			shield.setHealth(3);
-			shield.setPosition(VECTOR2(GAME_WIDTH+100, rand()%500));
-			shield.setX(shield.getPositionX());
-			shield.setY(shield.getPositionY());
-			shield.setVelocity(VECTOR2(-shieldNS::SPEED,0));
-			shield.setVisible(true);
-			shield.setActive(true);
-		}
-}
+ 			shield.setPosition(VECTOR2(GAME_WIDTH+100, rand()%500));
+ 			shield.setX(shield.getPositionX());
+ 			shield.setY(shield.getPositionY());
+ 			shield.setVelocity(VECTOR2(-shieldNS::SPEED,0));
+ 			shield.setVisible(true);
+ 			shield.setActive(true);
+ 		}
+ }
 
 
 void CollisionTypes::moveBackground()
@@ -992,7 +1104,32 @@ void CollisionTypes::createBungee()  //might be able to make this smaller if i m
 		}
 	}
 
-	if(numMarked == 2)
+	if(boss.isLocked() && numMarked == 2) {
+			//NEED TO MAKE THIS A FOR LOOP FOR ALL BUNGEES:
+			if(!bungees[0].getBungeeState() == none)   //STUPID TO RUN BOTH A VISIBLE AND BUNGEE STATE TEST, SINCE THEY GO TOGETHER
+			{
+				currentlyHit1->setBungeed(false);
+				currentlyHit2->setBungeed(false);
+			}
+			else {
+				currentlyHit1->setBungeed(true);
+				currentlyHit2->setBungeed(true);
+				bungees[0].setBungeeState(enemyToEnemy);
+				bungees[0].setPointer1(currentlyHit1);
+				bungees[0].setPointer2(currentlyHit2);
+			}
+				//currentlyHit1->setAttachedTo(&bungees[0]);
+				numMarked = 0;
+				currentlyHit1 = NULL;
+				currentlyHit2 = NULL;
+				groundLocX = 0;
+				boss.setLocked(false);
+				marker.setVisible(false);
+				boss.setMarked(false);
+			
+	} 
+
+	if(!boss.isLocked() && numMarked == 2)
 	{
 		if(!bungees[0].getBungeeState() == none)  //WON'T NEED IF WE HAVE MULTIPLE BUNGEES
 		{
@@ -1011,6 +1148,11 @@ void CollisionTypes::createBungee()  //might be able to make this smaller if i m
 		marker.setVisible(false);
 		currentlyHit1 = NULL;
 		currentlyHit2 = NULL;
+	}
+	else {
+
+	bool fuck = boss.isLocked();
+	int shit = numMarked;
 	}
 }
 void CollisionTypes::tanksShoot()
@@ -1032,7 +1174,7 @@ void CollisionTypes::tanksShoot()
 						double deltaY = enemyTanks[j].getPositionY() - avatar.getPositionY();
 						VECTOR2 v1(deltaX, deltaY);
 						D3DXVec2Normalize(&v1, &v1);
-						tankBullets[j].setRadians(atan2(deltaY, deltaX));
+						tankBullets[i].setRadians(atan2(deltaY, deltaX));
 						tankBullets[i].setVisible(true);
 						tankBullets[i].setActive(true);
 						tankBullets[i].setX(enemyTanks[j].getPositionX() + tankNS::WIDTH/2);
@@ -1074,6 +1216,61 @@ void CollisionTypes::shipsShoot()
 		}
 	}
 }
+
+void CollisionTypes::bossShoot() {
+
+		if (level != 2) {
+			if(gameStates == bossBattle) //bosses[level-1].getVisible() && bosses[level-1].getActive())
+			{
+				tempRand = rand()%40;	//MAKE VALUES DEPENDING ON LEVEL
+				if(tempRand == 0)
+				{
+					for(int i = 0; i < numBossBullets; i++)
+					{
+						if(!bossBullets[i].getVisible())
+						{
+							audio->playCue(ENEMY_SHOT);
+							bossBullets[i].setVisible(true);
+							bossBullets[i].setActive(true);
+							bossBullets[i].setX(boss.getX());
+							bossBullets[i].setY(boss.getY()+boss.getHeight()/2);
+							bossBullets[i].setVelocity(VECTOR2(-enemyBulletSpeed, 0));
+						
+							break;
+						}
+					}
+				}
+			}
+		}
+		if (level == 2) {
+			if (boss.getX() > avatar.getX() + avatarNS::WIDTH) {
+				tempRand = rand()%40;	//MAKE VALUES DEPENDING ON LEVEL
+				if(tempRand == 0)
+				{
+					for(int i = 0; i < numBossBullets; i++)
+					{
+						if(!bossBullets[i].getVisible())
+						{
+							audio->playCue(ENEMY_SHOT);
+
+							double deltaX = (boss.getX() + bossNS::WIDTH/2) - avatar.getX();
+							double deltaY = boss.getY() - avatar.getY();
+							VECTOR2 v1(deltaX, deltaY);
+							D3DXVec2Normalize(&v1, &v1);
+							bossBullets[i].setRadians(atan2(deltaY, deltaX));
+							bossBullets[i].setVisible(true);
+							bossBullets[i].setActive(true);
+							bossBullets[i].setX(boss.getX());
+							bossBullets[i].setY(boss.getY()+boss.getHeight()/2);
+							bossBullets[i].setVelocity(v1 * -enemyBulletSpeed);
+				
+							break;
+						}
+					}
+				}
+			}
+		}
+}
 void CollisionTypes::avatarShoot()
 {
 	if (!avatar.getDead() && input->getMouseLButton() && depressedLastFrame && input->getMouseX() > avatar.getX() + avatarNS::WIDTH) {
@@ -1111,9 +1308,7 @@ void CollisionTypes::shipToGround()
 			if(enemyShips[i].getBungeed())
 			{
 				score += 1;
-				//score indicators
 				enemies[i]->addScore(1,enemies[i]->getX(),enemies[i]->getY());
-
 				enemyShips[i].setBungeed(false);
 				bungees[0].clear();
 
@@ -1170,11 +1365,11 @@ void CollisionTypes::resetEnemy(Enemy* enemy)
 void CollisionTypes::spawnEnemyShip()
 {
 	if(level == 1)
-		shipSpeed = rand()%100 + 155;
+		shipSpeed = rand()%100 + 150;
 	if(level == 2)
-		shipSpeed = rand()%100 + 165;
+		shipSpeed = rand()%100 + 155;
 	if(level == 3)
-		shipSpeed = rand()%100 + 175;
+		shipSpeed = rand()%100 + 165;
 	//random y location
 	//set enemy location and visible and velocity
 	for(int i = 0; i < numShips; i++)
@@ -1218,42 +1413,12 @@ void CollisionTypes::spawnEnemyTank()
 	}
 }
 
-void CollisionTypes::getScores()
-{
-	int tempint;
-	std::string tempstr;
-
-	std::ifstream inFile(SCORES_NAME);
-
-	while (inFile >> tempint >> tempstr)
-	{
-		highScores.push_back(HighScoreEntry(tempstr, tempint));
-	}
-	inFile.close();
-}
-void CollisionTypes::outputScores(std::string s)
-{
-	std::stringstream scoreStream;
-
-	highScores.push_back(HighScoreEntry(s, totalScore));
-
-	std::sort( highScores.begin(), highScores.end() );
-	
-
-	std::ofstream outFile(SCORES_NAME);
-	for(int i=0; i<highScores.size(); i++)
-	{
-		outFile << highScores[i] << std::endl;
-	}
-
-	outFile.close();
-}
-
 //=============================================================================
 // Artificial Intelligence
 //=============================================================================
 void CollisionTypes::ai()
-{}
+{
+}
 
 //=============================================================================
 // Handle collisions
@@ -1271,6 +1436,7 @@ void CollisionTypes::collisions()
 	if(avatar.collidesWith(shield, collisionVector))
 	{
 		shield.setAttached(true);
+		shield.setHealth(2);
 	}
 	//between shield and enemy bullets
 	if(shield.getAttached())
@@ -1291,6 +1457,14 @@ void CollisionTypes::collisions()
 				shield.setHealth(shield.getHealth()-1);
 				tankBullets[i].setVisible(false);
 				tankBullets[i].setActive(false);	
+			}
+		}
+
+		for(int i = 0; i < numBossBullets; i++) {
+			if(shield.collidesWith(bossBullets[i], collisionVector)) {
+				shield.setHealth(shield.getHealth()-1);
+				bossBullets[i].setVisible(false);
+				shipBullets[i].setActive(false);
 			}
 		}
 	}
@@ -1327,27 +1501,15 @@ void CollisionTypes::collisions()
 		}
 	}
 
-	//between avatar and enemy:
-	for(int i = 0; i < numShips+numTanks; i++)
-	{
-		if(avatar.collidesWith(*enemies[i], collisionVector))
+	//shield on boss
+	if(shield.collidesWith(boss, collisionVector))
+		shield.setHealth(shield.getHealth()-1);
+
+	//between avatar and BOSS:
+	if(avatar.collidesWith(boss, collisionVector))
 		{
 			crashedTime = GetTickCount();
 
-			for (int k = 0; k < 10; k++)
-			{
-				if (!explosion[k].getVisible())
-				{
-					//die
-					audio->playRandomCue(EXPLOSION_1, EXPLOSION_2, EXPLOSION_3);
-
-					explosion[k].setX(avatar.getCenterX() - explosion[k].getWidth()/2 );
-					explosion[k].setY(avatar.getCenterY() - explosion[k].getHeight()/2 );
-					explosion[k].setCurrentFrame(0);
-					explosion[k].setVisible(true);
-					break;
-				}
-			}
 			if(!invincibility)
 			{
 				for (int k = 0; k < 10; k++)
@@ -1355,8 +1517,39 @@ void CollisionTypes::collisions()
 					if (!explosion[k].getVisible())
 					{
 						//die
-						explosion[k].setX(enemies[i]->getCenterX() - explosion[k].getWidth()/2 );
-						explosion[k].setY(enemies[i]->getCenterY() - explosion[k].getHeight()/2 );
+						audio->playRandomCue(EXPLOSION_1, EXPLOSION_2, EXPLOSION_3);
+
+						explosion[k].setX(avatar.getCenterX() - explosion[k].getWidth()/2 );
+						explosion[k].setY(avatar.getCenterY() - explosion[k].getHeight()/2 );
+						explosion[k].setCurrentFrame(0);
+						explosion[k].setVisible(true);
+						break;
+					}
+				}
+				avatar.setVisible(false);
+				avatar.setActive(false);
+				avatar.setDead(true);
+			}				
+		}
+
+	//between avatar and enemy:
+	for(int i = 0; i < numShips+numTanks; i++)
+	{
+		if(avatar.collidesWith(*enemies[i], collisionVector))
+		{
+			crashedTime = GetTickCount();
+
+			if(!invincibility)
+			{
+				for (int k = 0; k < 10; k++)
+				{
+					if (!explosion[k].getVisible())
+					{
+						//die
+						audio->playRandomCue(EXPLOSION_1, EXPLOSION_2, EXPLOSION_3);
+
+						explosion[k].setX(avatar.getCenterX() - explosion[k].getWidth()/2 );
+						explosion[k].setY(avatar.getCenterY() - explosion[k].getHeight()/2 );
 						explosion[k].setCurrentFrame(0);
 						explosion[k].setVisible(true);
 						break;
@@ -1366,7 +1559,19 @@ void CollisionTypes::collisions()
 				avatar.setActive(false);
 				avatar.setDead(true);
 			}
-
+			
+			for (int k = 0; k < 10; k++)
+			{
+				if (!explosion[k].getVisible())
+				{
+					//die
+					explosion[k].setX(enemies[i]->getCenterX() - explosion[k].getWidth()/2 );
+					explosion[k].setY(enemies[i]->getCenterY() - explosion[k].getHeight()/2 );
+					explosion[k].setCurrentFrame(0);
+					explosion[k].setVisible(true);
+					break;
+				}
+			}
 			if(!enemies[i]->getBungeed())
 			{
 				enemies[i]->setVisible(false);
@@ -1437,6 +1642,95 @@ void CollisionTypes::collisions()
 			}
 			tankBullets[i].setVisible(false);
 			tankBullets[i].setActive(false);	
+		}
+	}
+
+	//avatar and boss bullets
+	for (int i = 0; i < numBossBullets; i++) {
+
+		if(avatar.collidesWith(bossBullets[i], collisionVector)) {
+			
+			if (!invincibility) {
+
+				crashedTime = GetTickCount();
+
+				for (int k = 0; k < 10; k++)
+				{
+					if (!explosion[k].getVisible())
+					{
+						//die
+						audio->playRandomCue(EXPLOSION_1, EXPLOSION_2, EXPLOSION_3);
+
+						explosion[k].setX(avatar.getCenterX() - explosion[k].getWidth()/2 );
+						explosion[k].setY(avatar.getCenterY() - explosion[k].getHeight()/2 );
+						explosion[k].setCurrentFrame(0);
+						explosion[k].setVisible(true);
+						break;
+					}
+				}
+
+				avatar.setDead(true);
+				avatar.setVisible(false);
+				avatar.setActive(false);
+			}
+			bossBullets[i].setVisible(false);
+			bossBullets[i].setActive(false);	
+			}
+		}
+
+	//between avatarBullets and boss
+	for (int i = 0; i < numAvatarBullets; i++) {
+		
+		if(boss.collidesWith(avatarBullets[i], collisionVector)) {
+			boss.setLocked(true);
+		}
+	}
+
+	//between enemy and boss
+	for (int i = 0; i < numShips+numTanks; i++) {
+
+		if(boss.collidesWith(*enemies[i], collisionVector)) {
+			if(enemies[i]->getBungeed() && boss.getBungeed())		
+				{																	
+					// Explosion
+					for (int k = 0; k < 10; k++)
+					{
+						if (!explosion[k].getVisible())
+						{
+							//die
+							audio->playRandomCue(EXPLOSION_1, EXPLOSION_2, EXPLOSION_3);
+
+							explosion[k].setX(enemies[i]->getCenterX() - explosion[k].getWidth()/2 - 10 );
+							explosion[k].setY(enemies[i]->getCenterY() - explosion[k].getHeight()/2 - 10 );
+							explosion[k].setCurrentFrame(0);
+							explosion[k].setVisible(true);
+							break;
+						}
+					}
+					
+					enemies[i]->setMarked(false);
+					enemies[i]->setVisible(false);
+					enemies[i]->setActive(false);
+					enemies[i]->setBungeed(false);
+
+					bungees[0].clear();
+
+					boss.setLocked(false);
+					boss.setMarked(false);
+					boss.setBungeed(false);
+					//numMarked--;
+
+					score += 1;
+					enemies[i]->addScore(1,enemies[i]->getX(),enemies[i]->getY());
+
+					if((enemies[i]->getX() <= boss.getX() + boss.getWidth()) && (enemies[i]->getX() >= boss.getX() + boss.getWidth()-10))
+					{
+						boss.setHealth(boss.getHealth()-100);
+					}
+					if (boss.getHealth() == 0) {
+						boss.setDead(true);
+					}
+				}
 		}
 	}
 
@@ -1560,13 +1854,9 @@ void CollisionTypes::collisions()
 
 					enemies[i]->setBungeed(false);
 					enemies[j]->setBungeed(false);
-					
-
 					score += 2;
-					//score indicators
 					enemies[i]->addScore(1,enemies[i]->getX(),enemies[i]->getY());
 					enemies[j]->addScore(1,enemies[j]->getX(),enemies[j]->getY());
-
 
 					//make a for loop if using multiple bungees
 					bungees[0].clear();
@@ -1608,6 +1898,29 @@ void CollisionTypes::collisions()
 						currentlyHit2 = enemies[i];
 					}
 				}
+				//while(1){break;}
+			}
+			// 
+			if(boss.collidesWith(avatarBullets[j], collisionVector)) {
+				avatarBullets[j].setVisible(false);
+				avatarBullets[j].setActive(false);
+				avatarBullets[j].setVelocity(VECTOR2(0, 0));
+
+				if (!boss.getMarked()) {
+					boss.setMarked(true);
+					if(currentlyHit1 == NULL) {
+						currentlyHit1 = bossPointer;
+						numMarked++;
+					}
+					else if(currentlyHit2 == NULL) {
+						numMarked++;
+						currentlyHit2 = bossPointer;
+					}
+					else {
+						currentlyHit2->setMarked(false);
+						currentlyHit2 = bossPointer;
+					}
+				}
 			}
 		}
 	}
@@ -1632,6 +1945,12 @@ void CollisionTypes::render()
 		case quit:
 			break;
 
+		case restart:
+		case restartFromCheckpoint:
+			if(avatar.getDead())
+				youDied.draw();
+			//else baseDestroyed.draw();
+			break;
 		case tutorial:
 			switch(tutScreen)
 			{
@@ -1642,24 +1961,19 @@ void CollisionTypes::render()
 			case tutorial5: tut5.draw(); break;
 			}
 
-		case restart:
-			if(avatar.getDead())
-				youDied.draw();
-			//else baseDestroyed.draw();
 			break;
 
 		case win: 
 			endScreen.draw();
-
+			
 			if(!showHighScores)
 			{
 				scoreStream << "Your Score: " << totalScore << endl << "Enter name: " << input->getTextIn();
 				scoreText.print(scoreStream.str(), GAME_WIDTH/2+60, GAME_HEIGHT/2-30);
 			}
-			
+
 			scoreStream.clear();
 
-			
 			if(showHighScores)
 			{
 				
@@ -1667,6 +1981,7 @@ void CollisionTypes::render()
 					scoreStream << i+1 << ".   " << highScores[i].score << "    " << highScores[i].name << endl;
 				scoreText.print(scoreStream.str(), GAME_WIDTH/2+80, GAME_HEIGHT/2-30);
 			}
+
 
 			if(showHighScores && timeInState > 5)
 				credits.draw();
@@ -1679,6 +1994,14 @@ void CollisionTypes::render()
 			scoreText.print(scoreStream.str(), GAME_WIDTH/2+60, GAME_HEIGHT/2-30);
 
 			break;
+
+		case bossBattle:
+
+			//bosses[level-1].setActive(true);
+			//bosses[level-1].setVisible(true);
+			/*for (int i = 0; i < numBossBullets; i++) {
+				bossBullets[i].draw();
+			}*/
 
 		case gamePlay:
 		{
@@ -1711,6 +2034,19 @@ void CollisionTypes::render()
 			//{
 				bungees[0].draw();  //draw first
 			//}
+
+			if (gameStates == bossBattle) {
+				bossHealth.setX(boss.getX() + (bossNS::WIDTH/5));
+				bossHealth.setY(boss.getY() - 20);
+				bossHealthBar.setX(bossHealth.getX()-2);
+				bossHealthBar.setY(bossHealth.getY()-1);
+				bossHealth.setScaleX(boss.getHealth());
+				bossHealthBar.draw();
+				bossHealth.draw();
+				for (int i = 0; i < numBossBullets; i++) 
+					bossBullets[i].draw();
+				boss.draw();
+			}
 
 			for (int i = 0; i<numShips+numTanks; i++)
 			{
@@ -1756,12 +2092,15 @@ void CollisionTypes::render()
 			font.print(marked.str(), 20, 20);
 
 			bar.draw();
-			timeBar.setScaleX(timeLeftOnLevel*(100.0/endLevelTime));
+			timeBar.setScaleX(timeLeftOnLevel*(100.0/45.0));
 			timeBar.draw();
 
 			//display score indicators if needed
 			for(int i = 0; i < numShips+numTanks; i++)
 				enemies[i]->displayScore();
+
+
+			
 
 			break;
 		}
@@ -1769,6 +2108,39 @@ void CollisionTypes::render()
 
     graphics->spriteEnd();                  // end drawing sprites
 }
+
+void CollisionTypes::getScores()
+{
+	int tempint;
+	std::string tempstr;
+
+	std::ifstream inFile(SCORES_NAME);
+
+	while (inFile >> tempint >> tempstr)
+	{
+		highScores.push_back(HighScoreEntry(tempstr, tempint));
+	}
+	inFile.close();
+}
+
+void CollisionTypes::outputScores(std::string s)
+{
+	std::stringstream scoreStream;
+
+	highScores.push_back(HighScoreEntry(s, totalScore));
+
+	std::sort( highScores.begin(), highScores.end() );
+	
+
+	std::ofstream outFile(SCORES_NAME);
+	for(int i=0; i<highScores.size(); i++)
+	{
+		outFile << highScores[i] << std::endl;
+	}
+
+	outFile.close();
+}
+
 
 //=============================================================================
 // The graphics device was lost.

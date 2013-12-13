@@ -89,6 +89,7 @@ const float MIN_FRAME_TIME = 1.0f/FRAME_RATE;   // minimum desired time for 1 fr
 const float MAX_FRAME_TIME = 1.0f/MIN_FRAME_RATE; // maximum time used in calculations
 const RECT COLLISION_RECTANGLE = {-30, -16, 30, 16}; 
 const RECT COLLISION_BOX_SHIP = {-30, -10, 30, 10};		//{ -x, -y, x, y}
+const RECT COLLISION_BOX_BOSS = {-80,-80, 80, 80};
 const RECT COLLISION_BOX_AVATAR = {-48, -14, 48, 14};
 const RECT COLLISION_BOX_SHIELD = {-60, -60, 60, 60};
 const RECT COLLISION_BOX_BULLET = {-8, -8, 8, 8};
@@ -98,6 +99,7 @@ const float COLLISION_RADIUS = 29;
 // graphic images
 const char BUNGEE_IMAGE[] = "pictures\\bungee.png";
 const char ENEMYSHIP_IMAGE[] = "pictures\\enemyShip.png";
+const char BOSS_IMAGE[] = "pictures\\boss.png";
 const char AVATAR_IMAGE[] = "pictures\\AvatarShip.png";      // avatar texture
 const char AVATARBULLET_IMAGE[] = "pictures\\avatarBullet.png";
 const char ENEMYBULLET_IMAGE[] = "pictures\\enemyBullet.png";
@@ -114,19 +116,19 @@ const char HEALTH_IMAGE[] = "pictures\\health.png";
 const char BAR_IMAGE[] = "pictures\\bar.png";
 const char EXPLOSION_IMAGE[] = "pictures\\Explosion.png";
 const char SHIELD_IMAGE[] = "pictures\\shield.png";
-
-const char BASEDESTROYED_IMAGE[] = "pictures\\Base Destroyed.png";
-const char CREDITS_IMAGE[] = "pictures\\Credits.png";
-const char ENDSCREEN_IMAGE[] = "pictures\\End Screen.png";
-const char LEVELCOMPLETE_IMAGE[] = "pictures\\Level Complete.png";
-const char YOUDIED_IMAGE[] = "pictures\\You Died.png";
-
 //tutorial screens
 const char TUT1_IMAGE[] = "pictures\\tut1.png";
 const char TUT2_IMAGE[] = "pictures\\tut2.png";
 const char TUT3_IMAGE[] = "pictures\\tut3.png";
 const char TUT4_IMAGE[] = "pictures\\tut4.png";
 const char TUT5_IMAGE[] = "pictures\\tut5.png";
+
+
+const char BASEDESTROYED_IMAGE[] = "pictures\\Base Destroyed.png";
+const char CREDITS_IMAGE[] = "pictures\\Credits.png";
+const char ENDSCREEN_IMAGE[] = "pictures\\End Screen.png";
+const char LEVELCOMPLETE_IMAGE[] = "pictures\\Level Complete.png";
+const char YOUDIED_IMAGE[] = "pictures\\You Died.png";
 
 
 // key mappings
@@ -170,7 +172,8 @@ const char AVATAR_EXPLOSION[] = "Explosion 4";
 
 
 enum BungeeStates {none, enemyToEnemy, enemyToGround};
-enum Type {SHIP, TANK};
-enum GameStates {menu, gamePlay, quit, restart, win, levelEnd, tutorial};
+enum Type {SHIP, TANK, BOSS};
+enum GameStates {menu, gamePlay, quit, restart, win, levelEnd, tutorial, bossBattle, restartFromCheckpoint};
+
 
 #endif

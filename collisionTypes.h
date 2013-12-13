@@ -24,10 +24,11 @@ class CollisionTypes;
 #include "menu.h"
 #include "shield.h"
 #include "HighScoreEntry.h"
-#include <sstream>
-#include <iomanip>
+#include "boss.h"
 #include <fstream>
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -43,22 +44,25 @@ private:
 	Menu *mainMenu;
 
     // game items
-    TextureManager bungeeTM, enemyShipTM, enemyTankTM, avatarTM, avatarBulletTM, enemyBulletTM, background1TM,
+    TextureManager bungeeTM, enemyShipTM, bossTM, enemyTankTM, avatarTM, avatarBulletTM, enemyBulletTM, background1TM,
 		midground1TM, background2TM, midground2TM, background3TM, midground3TM, markerTM, menuScreenTM, timeTM, barTM, explosionTM,
 		baseDestroyedTM, creditsTM, endScreenTM, levelCompleteTM, youDiedTM, shieldTM, tut1TM, tut2TM, tut3TM, tut4TM, tut5TM;   // game texture
     VECTOR2 collisionVector;    // collision vector
 	Ship enemyShips[7];
 	Tank enemyTanks[7];
+	Enemy* bossPointer;
+	Boss boss;
 	Bullet avatarBullets[3];
 	Bullet shipBullets[10];
 	Bullet tankBullets[10];
+	Bullet bossBullets[10];
 	//Bungee bungee1, bungee2, bungee3;
 	Bungee bungees[3];
 	Image Level_1_Background1, Level_1_Background2, Level_1_Midground1, Level_1_Midground2, Level_2_Background1, Level_2_Background2,
 		Level_2_Midground1, Level_2_Midground2, Level_3_Background1, Level_3_Background2, Level_3_Midground1, Level_3_Midground2, menuScreen,
 		baseDestroyed, credits, endScreen, levelComplete, youDied, tut1, tut2, tut3, tut4, tut5;
 	
-	Image marker, timeBar, bar;
+	Image marker, timeBar, bar, bossHealthBar, bossHealth;
 	Image explosion[10];
 	Avatar avatar;
 	Enemy* enemies[14];
@@ -66,6 +70,7 @@ private:
 
 	int score;
 	int totalScore;
+	int preBossScore;
 	//bool collision;
 	int numMarked;
 	Enemy* currentlyHit1;
@@ -88,9 +93,8 @@ private:
 	TextDX invincible;
 	TextDX scoreText;
 	TextDX* scoreIndicator;
-	
-	std::vector<HighScoreEntry> highScores;
 
+	std::vector<HighScoreEntry> highScores;
 
 	// State 
 	GameStates gameStates;
@@ -98,6 +102,9 @@ private:
 	void gameStateUpdate();
 	bool gameStart;
 	bool exitReadyToPlay;
+
+	//PatternStep patternSteps[maxPatternSteps];
+	//int patternStepIndex;
 
 public:
     // Constructor
@@ -117,6 +124,7 @@ public:
 
 	void spawnEnemyShip();
 	void spawnEnemyTank();
+	void spawnShield();
 	void updateShield();
 	void waves();
 
@@ -124,15 +132,16 @@ public:
 
 	void tanksShoot();
 	void shipsShoot();
+	void bossShoot();
 	void createBungee();
 	void avatarShoot();
 	void shipToGround();
 	void initializeLevel();
 	void moveBackground();
 	void resetEverything();
-
 	void getScores();
 	void outputScores(std::string);
+
 	
 
 	int enemyBulletSpeed;
@@ -141,12 +150,12 @@ public:
 	int numShips;
 	int numShipBullets;
 	int numTankBullets;
+	int numBossBullets;
 	int numAvatarBullets;
 	int tankSpeed;
 	int shipSpeed;
 	int tankSpawnRate;
 	int shipSpawnRate;
-
 	TutorialScreen tutScreen;
 };
 

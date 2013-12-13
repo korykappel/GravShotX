@@ -38,6 +38,7 @@ private:
 	TextDX* scoreIndicator;
 	int x, y;
 
+
 	Type type;
 	
 	//Bungee* attachedTo;
@@ -46,13 +47,9 @@ public:
     // constructor
     Enemy();
 
-	bool initialize(Game *gamePtr, int width, int height, int ncols, TextureManager *textureM, TextDX* font)
-	{scoreIndicator = font; return Entity::initialize(gamePtr, width, height, ncols, textureM);}
-
-
     // inherited member functions
     virtual bool initialize(Game *gamePtr, int width, int height, int ncols,
-                            TextureManager *textureM);
+                            TextureManager *textureM, TextDX* font);
     void update(float frameTime);
 
 	void setNeedsReset(bool r) {needsReset = r;}
@@ -72,6 +69,8 @@ public:
 
 	void addScore(int score, int posx, int posy) {x=posx; y=posy; scoreToDisplay = score; fontDisplayFrameCount = 0;}
 	void displayScore();
+
+
 };
 #endif
 

@@ -32,7 +32,6 @@ private:
 	bool hitGround;
 	//bool marked;
 
-
 public:
     // constructor
     Ship();
